@@ -1,0 +1,29 @@
+{
+  "name": "openmusic-api",
+  "version": "1.0.0",
+  "description": "Open Music Api Dicoding",
+  "license": "ISC",
+  "author": "Aditya Pratama",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "migrate": "node-pg-migrate",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down",
+    "test:db": "node test-db.js",
+    "setup:sample": "node setup-sample-data.js"
+  },
+  "dependencies": {
+    "@hapi/hapi": "^21.4.0",
+    "dotenv": "^16.5.0",
+    "joi": "^17.13.3",
+    "nanoid": "^5.1.5",
+    "pg": "^8.16.0"
+  },
+  "devDependencies": {
+    "node-pg-migrate": "^8.0.1",
+    "nodemon": "^3.1.10"
+  }
+}
