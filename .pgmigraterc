@@ -1,8 +1,22 @@
 {
-  "database-url": {
-    "ENV": "DATABASE_URL"
+  "user": {
+    "ENV": "PGUSER"
+  },
+  "password": {
+    "ENV": "PGPASSWORD"
+  },
+  "database": {
+    "ENV": "PGDATABASE"
+  },
+  "host": {
+    "ENV": "PGHOST"
+  },
+  "port": {
+    "ENV": "PGPORT"
   },
   "migrations-dir": "migrations",
   "migrations-table": "pgmigrations",
-  "schema": "public"
+  "schema": "public",
+  "create-schema": true,
+  "check-order": true
 }

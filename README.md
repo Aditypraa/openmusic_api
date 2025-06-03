@@ -71,7 +71,7 @@ npm run setup:sample
 npm start
 ```
 
-Server akan berjalan di `http://localhost:4000` (atau port yang dikonfigurasi di .env)
+Server akan berjalan di `http://localhost:5000` (atau port yang dikonfigurasi di .env)
 
 ## Testing API
 

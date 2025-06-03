@@ -13,7 +13,13 @@
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
     "test:db": "node test-db.js",
-    "setup:sample": "node setup-sample-data.js"
+    "setup:sample": "node setup-sample-data.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier --write .",
+    "format": "npm run prettier:fix && npm run lint:fix",
+    "check": "npm run prettier && npm run lint"
   },
   "dependencies": {
     "@hapi/hapi": "^21.4.0",
@@ -23,7 +29,13 @@
     "pg": "^8.16.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.28.0",
+    "eslint": "^9.28.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-prettier": "^5.4.1",
+    "globals": "^16.2.0",
     "node-pg-migrate": "^8.0.1",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "prettier": "^3.5.3"
   }
 }
