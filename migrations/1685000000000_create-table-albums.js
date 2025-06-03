@@ -1,14 +1,10 @@
-/* eslint-disable camelcase */
-
 // Migration untuk membuat tabel albums
 // Kriteria 5: Menggunakan PostgreSQL dengan database migration
 // File migration ini menggunakan node-pg-migrate untuk membuat tabel albums
 // dengan struktur yang sesuai dan menyediakan rollback function
 
-exports.shorthands = undefined;
-
 // Function untuk menjalankan migration (membuat tabel albums)
-exports.up = (pgm) => {
+export const up = (pgm) => {
   pgm.createTable("albums", {
     // Primary key: id dengan format "album-{nanoid}"
     id: {
@@ -39,6 +35,6 @@ exports.up = (pgm) => {
 };
 
 // Function untuk rollback migration (menghapus tabel albums)
-exports.down = (pgm) => {
+export const down = (pgm) => {
   pgm.dropTable("albums");
 };

@@ -1,15 +1,11 @@
-/* eslint-disable camelcase */
-
 // Migration untuk membuat tabel songs
 // Kriteria 5: Menggunakan PostgreSQL dengan database migration
 // Kriteria Optional: Implementasi relasi antara albums dan songs
 // File migration ini menggunakan node-pg-migrate untuk membuat tabel songs
 // dengan struktur yang sesuai dan foreign key constraint ke tabel albums
 
-exports.shorthands = undefined;
-
 // Function untuk menjalankan migration (membuat tabel songs)
-exports.up = (pgm) => {
+export const up = (pgm) => {
   pgm.createTable("songs", {
     // Primary key: id dengan format "song-{nanoid}"
     id: {
@@ -67,6 +63,6 @@ exports.up = (pgm) => {
 };
 
 // Function untuk rollback migration (menghapus tabel songs)
-exports.down = (pgm) => {
+export const down = (pgm) => {
   pgm.dropTable("songs");
 };
