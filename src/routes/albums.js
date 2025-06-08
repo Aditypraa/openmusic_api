@@ -1,40 +1,25 @@
-// Import dependencies untuk konfigurasi routes albums
-import AlbumsHandler from "../handlers/AlbumsHandler.js"; // Handler untuk menangani request albums
-import AlbumsService from "../services/AlbumsService.js"; // Service untuk business logic albums
-import AlbumsValidator from "../validator/albums/index.js"; // Validator untuk validasi data albums
-
-// Inisialisasi service dan handler dengan dependency injection
-const albumsService = new AlbumsService();
-const albumsHandler = new AlbumsHandler(albumsService, AlbumsValidator);
-
-// Konfigurasi routing untuk endpoint albums
-// Mengatur mapping antara HTTP method, path, dan handler function
-const albumsRoutes = [
+// Routes untuk operasi album
+const routes = (handler) => [
   {
-    // POST /albums - Endpoint untuk menambahkan album baru
     method: "POST",
     path: "/albums",
-    handler: albumsHandler.postAlbumHandler,
+    handler: (request, h) => handler.postAlbumHandler(request, h),
   },
   {
-    // GET /albums/{id} - Endpoint untuk mendapatkan album berdasarkan ID
-    // Termasuk optional feature untuk menampilkan songs dalam album
     method: "GET",
     path: "/albums/{id}",
-    handler: albumsHandler.getAlbumByIdHandler,
+    handler: (request, h) => handler.getAlbumByIdHandler(request, h),
   },
   {
-    // PUT /albums/{id} - Endpoint untuk mengupdate data album berdasarkan ID
     method: "PUT",
     path: "/albums/{id}",
-    handler: albumsHandler.putAlbumByIdHandler,
+    handler: (request, h) => handler.putAlbumByIdHandler(request, h),
   },
   {
-    // DELETE /albums/{id} - Endpoint untuk menghapus album berdasarkan ID
     method: "DELETE",
     path: "/albums/{id}",
-    handler: albumsHandler.deleteAlbumByIdHandler,
+    handler: (request, h) => handler.deleteAlbumByIdHandler(request, h),
   },
 ];
 
-export default albumsRoutes;
+export default routes;

@@ -1,136 +1,276 @@
-# OpenMusic API
+# 🎵 OpenMusic API v2
 
-API untuk aplikasi pemutar musik OpenMusic yang menyediakan endpoint untuk mengelola album dan lagu.
+RESTful API untuk platform musik dengan fitur manajemen playlist, kolaborasi pengguna, dan sistem autentikasi yang aman.
 
-## Fitur
+## 📋 Daftar Isi
 
-- CRUD Album (Create, Read, Update, Delete)
-- CRUD Songs (Create, Read, Update, Delete)
-- Data validation menggunakan Joi
-- Database PostgreSQL dengan migrations
-- Error handling yang komprehensif
-- Query parameter untuk pencarian lagu (title, performer)
-- Menampilkan daftar lagu dalam detail album
+- [Fitur Utama](#-fitur-utama)
+- [Teknologi](#-teknologi)
+- [Instalasi dan Setup](#-instalasi-dan-setup)
+- [Struktur Database](#-struktur-database)
+- [API Endpoints](#-api-endpoints)
+- [Dokumentasi Lengkap](#-dokumentasi-lengkap)
+- [Testing](#-testing)
+- [Kriteria Submission](#-kriteria-submission)
 
-## Persyaratan
+## ✨ Fitur Utama
 
-- Node.js (v14 atau lebih baru)
-- PostgreSQL
-- npm atau yarn
+### V1 (Fitur Dasar - Dipertahankan)
 
-## Installation
+- 🎸 **CRUD Album & Lagu** - Manajemen lengkap data musik
+- 🔍 **Pencarian Lagu** - Berdasarkan title dan performer
+- ✅ **Validasi Data** - Menggunakan Joi schema validation
 
-1. Clone repository:
+### V2 (Fitur Baru)
 
-```bash
-git clone <repository-url>
-cd openmusic-api
-```
+- 🔐 **Sistem Autentikasi** - JWT dengan access & refresh token
+- 👤 **Registrasi Pengguna** - Manajemen akun user
+- 📝 **Manajemen Playlist** - CRUD playlist pribadi
+- 🤝 **Kolaborasi Playlist** - Berbagi dan kolaborasi playlist
+- 📊 **Activity Tracking** - Riwayat aktivitas playlist
 
-2. Install dependencies:
+## 🛠 Teknologi
+
+| Kategori           | Teknologi                         |
+| ------------------ | --------------------------------- |
+| **Backend**        | Node.js + Hapi.js Framework       |
+| **Database**       | PostgreSQL dengan node-pg-migrate |
+| **Authentication** | JSON Web Token (JWT)              |
+| **Validation**     | Joi Schema Validator              |
+| **Architecture**   | Clean Architecture Pattern        |
+
+## 🚀 Instalasi dan Setup
+
+### Persyaratan Sistem
+
+- Node.js v16+
+- PostgreSQL v12+
+- npm atau yarn package manager
+
+### Langkah Instalasi
+
+#### 1. Install Dependencies
 
 ```bash
 npm install
 ```
 
-3. Setup environment variables:
+#### 2. Konfigurasi Environment
 
 ```bash
+# Salin file environment template
 cp .env.example .env
 ```
 
-Edit file `.env` dan sesuaikan dengan konfigurasi database Anda.
+Edit file `.env` dengan konfigurasi Anda:
 
-4. Buat database PostgreSQL:
+```env
+# Server Configuration
+HOST=localhost
+PORT=5000
 
-```sql
-CREATE DATABASE openmusic_api;
+# Database Configuration
+PGUSER=postgres
+PGPASSWORD=your_database_password
+PGDATABASE=openmusic
+PGHOST=localhost
+PGPORT=5432
+
+# JWT Secrets (Ganti dengan secret yang aman)
+ACCESS_TOKEN_KEY=your_super_secret_access_key
+REFRESH_TOKEN_KEY=your_super_secret_refresh_key
+ACCESS_TOKEN_AGE=3600
+REFRESH_TOKEN_AGE=86400
 ```
 
-5. Test koneksi database:
+#### 3. Setup Database
 
 ```bash
+# Test koneksi database
 npm run test:db
-```
 
-6. Jalankan migrations:
-
-```bash
+# Jalankan migrations
 npm run migrate:up
-```
 
-7. (Opsional) Setup sample data untuk testing:
-
-```bash
+# (Opsional) Setup sample data untuk testing
 npm run setup:sample
 ```
 
-8. Jalankan server:
+#### 4. Jalankan Server
 
 ```bash
+# Mode development dengan auto-reload
+npm run dev
+
+# Mode production
 npm start
 ```
 
-Server akan berjalan di `http://localhost:5000` (atau port yang dikonfigurasi di .env)
+Server akan berjalan di: **http://localhost:5000**
 
-## Testing API
+## 🗄 Struktur Database
 
-Lihat file `API_EXAMPLES.md` untuk contoh-contoh request API yang dapat digunakan untuk testing.
+OpenMusic API v2 menggunakan PostgreSQL dengan **8 tabel utama** yang terbagi dalam 2 versi:
 
-Atau gunakan tools seperti:
+### V1 Tables (Fitur Dasar)
 
-- Postman
-- Insomnia
-- Thunder Client (VS Code extension)
-- curl (command line)
+| Tabel    | Deskripsi                              |
+| -------- | -------------------------------------- |
+| `albums` | Data album musik                       |
+| `songs`  | Data lagu dengan foreign key ke albums |
 
-## API Endpoints
+### V2 Tables (Fitur Baru)
 
-### Albums
+| Tabel                      | Deskripsi                            |
+| -------------------------- | ------------------------------------ |
+| `users`                    | Data akun pengguna                   |
+| `authentications`          | JWT refresh tokens                   |
+| `playlists`                | Data playlist dengan owner reference |
+| `playlist_songs`           | Relasi many-to-many playlist-song    |
+| `collaborations`           | Data kolaborasi playlist             |
+| `playlist_song_activities` | Riwayat aktivitas playlist           |
 
-- `POST /albums` - Tambah album baru
-- `GET /albums/{id}` - Dapatkan album berdasarkan ID (termasuk daftar lagu)
-- `PUT /albums/{id}` - Update album
-- `DELETE /albums/{id}` - Hapus album
+> 📊 **Detail Lengkap:** Lihat struktur database lengkap dengan ERD, constraints, dan indexes di **[Database Schema](docs/DATABASE_SCHEMA.md)**
 
-### Songs
+## 🌐 API Endpoints
 
-- `POST /songs` - Tambah lagu baru
-- `GET /songs` - Dapatkan semua lagu (dengan query parameter opsional)
-- `GET /songs/{id}` - Dapatkan lagu berdasarkan ID
-- `PUT /songs/{id}` - Update lagu
-- `DELETE /songs/{id}` - Hapus lagu
+### V1 Endpoints (Public Access)
 
-### Query Parameters untuk Songs
+| Method   | Endpoint                   | Deskripsi               |
+| -------- | -------------------------- | ----------------------- |
+| `GET`    | `/albums`                  | Mendapatkan semua album |
+| `POST`   | `/albums`                  | Menambah album baru     |
+| `GET`    | `/albums/{id}`             | Detail album            |
+| `PUT`    | `/albums/{id}`             | Update album            |
+| `DELETE` | `/albums/{id}`             | Hapus album             |
+| `GET`    | `/songs`                   | Mendapatkan semua lagu  |
+| `POST`   | `/songs`                   | Menambah lagu baru      |
+| `GET`    | `/songs/{id}`              | Detail lagu             |
+| `PUT`    | `/songs/{id}`              | Update lagu             |
+| `DELETE` | `/songs/{id}`              | Hapus lagu              |
+| `GET`    | `/songs?title=&performer=` | Pencarian lagu          |
 
-- `?title=keyword` - Cari lagu berdasarkan judul
-- `?performer=keyword` - Cari lagu berdasarkan performer
-- Kombinasi: `?title=keyword&performer=keyword`
+### V2 Endpoints (Authentication Required)
 
-## Development
+#### 🔐 Authentication
 
-Untuk development dengan auto-reload:
+| Method   | Endpoint           | Deskripsi                |
+| -------- | ------------------ | ------------------------ |
+| `POST`   | `/users`           | Registrasi pengguna baru |
+| `POST`   | `/authentications` | Login pengguna           |
+| `PUT`    | `/authentications` | Refresh access token     |
+| `DELETE` | `/authentications` | Logout pengguna          |
+
+#### 📝 Playlist Management
+
+| Method   | Endpoint                     | Deskripsi                  |
+| -------- | ---------------------------- | -------------------------- |
+| `GET`    | `/playlists`                 | Mendapatkan playlist user  |
+| `POST`   | `/playlists`                 | Membuat playlist baru      |
+| `DELETE` | `/playlists/{id}`            | Hapus playlist             |
+| `GET`    | `/playlists/{id}/songs`      | Lagu dalam playlist        |
+| `POST`   | `/playlists/{id}/songs`      | Tambah lagu ke playlist    |
+| `DELETE` | `/playlists/{id}/songs`      | Hapus lagu dari playlist   |
+| `GET`    | `/playlists/{id}/activities` | Riwayat aktivitas playlist |
+
+#### 🤝 Collaboration
+
+| Method   | Endpoint          | Deskripsi          |
+| -------- | ----------------- | ------------------ |
+| `POST`   | `/collaborations` | Tambah kolaborator |
+| `DELETE` | `/collaborations` | Hapus kolaborator  |
+
+## 📚 Dokumentasi Lengkap
+
+Untuk informasi lebih detail, silakan lihat dokumentasi berikut:
+
+| 📁 File                                                           | 📄 Deskripsi                                                |
+| ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| **[📋 Criteria Checklist](docs/CRITERIA_CHECKLIST.md)**           | Checklist kriteria submission Dicoding                      |
+| **[🏗 Project Structure Guide](docs/PROJECT_STRUCTURE_GUIDE.md)** | Panduan arsitektur dan struktur proyek                      |
+| **[🗄️ Database Schema](docs/DATABASE_SCHEMA.md)**                 | **Struktur database lengkap dengan relasi dan constraints** |
+| **[🧪 Testing Guide](docs/TESTING_GUIDE.md)**                     | Panduan testing API endpoints                               |
+| **[📖 API Examples](docs/API_EXAMPLES.md)**                       | Contoh penggunaan API lengkap                               |
+
+> 💡 **Tips:**
+>
+> - Mulai dengan membaca **[Testing Guide](docs/TESTING_GUIDE.md)** untuk quick start testing API
+> - Lihat **[Database Schema](docs/DATABASE_SCHEMA.md)** untuk memahami struktur data lengkap
+> - Pelajari **[Project Structure Guide](docs/PROJECT_STRUCTURE_GUIDE.md)** untuk memahami arsitektur Clean Architecture
+
+## 🧪 Testing
+
+### Postman Collection
+
+Import collection dari folder `postman/` untuk testing lengkap:
+
+- **File Collection:** `Open Music API V2 Test.postman_collection.json`
+- **Environment:** `OpenMusic API Test.postman_environment.json`
+
+### Manual Testing
+
+Lihat panduan detail di **[Testing Guide](docs/TESTING_GUIDE.md)** untuk:
+
+- Setup testing environment
+- Authentication flow testing
+- Playlist management testing
+- Collaboration testing
+- Common troubleshooting
+
+### Development Commands
 
 ```bash
+# Jalankan dalam mode development
 npm run dev
+
+# Test koneksi database
+npm run test:db
+
+# Jalankan migrations
+npm run migrate:up
+
+# Rollback migrations
+npm run migrate:down
+
+# Setup sample data
+npm run setup:sample
 ```
 
-## Scripts
+## ✅ Kriteria Submission
 
-- `npm start` - Menjalankan server production
-- `npm run dev` - Menjalankan server development dengan nodemon
-- `npm run test:db` - Test koneksi database
-- `npm run migrate:up` - Menjalankan migrations
-- `npm run migrate:down` - Rollback migrations
-- `npm run setup:sample` - Setup sample data untuk testing
+### Kriteria Wajib (6/6) ✅
 
-## Environment Variables
+1. ✅ **Registrasi dan Autentikasi Pengguna**
+2. ✅ **Pengelolaan Data Playlist**
+3. ✅ **Menerapkan Foreign Key**
+4. ✅ **Menerapkan Data Validation**
+5. ✅ **Penanganan Eror (Error Handling)**
+6. ✅ **Mempertahankan Fitur OpenMusic API V1**
 
-- `HOST` - Host server (default: localhost)
-- `PORT` - Port server (default: 3000)
-- `PGUSER` - Username database PostgreSQL
-- `PGPASSWORD` - Password database PostgreSQL
-- `PGDATABASE` - Nama database PostgreSQL
-- `PGHOST` - Host database PostgreSQL
-- `PGPORT` - Port database PostgreSQL
-- `DATABASE_URL` - URL lengkap database untuk migrations
+### Kriteria Opsional (3/3) ✅
+
+1. ✅ **Fitur Kolaborasi Playlist**
+2. ✅ **Aktivitas Pengguna pada Playlist**
+3. ✅ **Mempertahankan Fitur Opsional OpenMusic API V1**
+
+**Status:** 🎯 **100% Complete** - Siap untuk submission!
+
+> 📊 **Detail Kriteria:** Lihat checklist lengkap di **[Criteria Checklist](docs/CRITERIA_CHECKLIST.md)**
+
+---
+
+## 📞 Informasi Tambahan
+
+- **Framework:** Hapi.js - Web framework yang powerful dan feature-rich
+- **Database Migration:** Menggunakan node-pg-migrate untuk version control database
+- **Authentication:** JWT dengan dual token system (access + refresh)
+- **Architecture:** Clean Architecture untuk maintainability
+- **Validation:** Joi schema untuk input validation yang robust
+
+---
+
+**🎵 OpenMusic API v2** - _Platform musik yang aman dan scalable untuk manajemen playlist collaborative_
+
+```
+
+```

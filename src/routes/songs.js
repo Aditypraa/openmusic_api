@@ -1,47 +1,31 @@
-// Import dependencies untuk konfigurasi routes songs
-import SongsHandler from "../handlers/SongsHandler.js"; // Handler untuk menangani request songs
-import SongsService from "../services/SongsService.js"; // Service untuk business logic songs
-import SongsValidator from "../validator/songs/index.js"; // Validator untuk validasi data songs
-
-// Inisialisasi service dan handler dengan dependency injection
-const songsService = new SongsService();
-const songsHandler = new SongsHandler(songsService, SongsValidator);
-
-// Konfigurasi routing untuk endpoint songs
-// Mengatur mapping antara HTTP method, path, dan handler function
-// Termasuk optional feature untuk search songs berdasarkan query parameter
-const songsRoutes = [
+// Routes untuk operasi lagu
+const routes = (handler) => [
   {
-    // POST /songs - Endpoint untuk menambahkan song baru
     method: "POST",
     path: "/songs",
-    handler: songsHandler.postSongHandler,
+    handler: (request, h) => handler.postSongHandler(request, h),
   },
   {
-    // GET /songs - Endpoint untuk mendapatkan daftar songs
-    // Mendukung optional query parameter: title dan performer untuk search
     method: "GET",
     path: "/songs",
-    handler: songsHandler.getSongsHandler,
+    handler: (request, h) => handler.getSongsHandler(request, h),
   },
   {
-    // GET /songs/{id} - Endpoint untuk mendapatkan song berdasarkan ID
     method: "GET",
     path: "/songs/{id}",
-    handler: songsHandler.getSongByIdHandler,
+    handler: (request, h) => handler.getSongByIdHandler(request, h),
   },
   {
-    // PUT /songs/{id} - Endpoint untuk mengupdate data song berdasarkan ID
     method: "PUT",
     path: "/songs/{id}",
-    handler: songsHandler.putSongByIdHandler,
+    handler: (request, h) => handler.putSongByIdHandler(request, h),
   },
   {
     // DELETE /songs/{id} - Endpoint untuk menghapus song berdasarkan ID
     method: "DELETE",
     path: "/songs/{id}",
-    handler: songsHandler.deleteSongByIdHandler,
+    handler: (request, h) => handler.deleteSongByIdHandler(request, h),
   },
 ];
 
-export default songsRoutes;
+export default routes;
