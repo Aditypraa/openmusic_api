@@ -69,10 +69,7 @@ class SongsService {
       query.values = values;
     }
 
-    console.log("Executing query:", query.text, "with values:", query.values);
-
     const result = await this._pool.query(query);
-    console.log("Query result:", result.rows);
 
     return result.rows;
   }

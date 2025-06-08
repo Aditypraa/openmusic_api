@@ -186,7 +186,6 @@ class PlaylistsService {
 
   // Verifikasi user adalah owner playlist (check ketat untuk edit/delete)
   async verifyPlaylistOwner(playlistId, userId) {
-    console.log(`Checking playlist existence for ID: ${playlistId}`);
     const query = {
       text: "SELECT owner FROM playlists WHERE id = $1",
       values: [playlistId],
@@ -195,22 +194,14 @@ class PlaylistsService {
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      console.error(`Playlist with ID: ${playlistId} does not exist.`);
       throw new NotFoundError("Playlist tidak ditemukan");
     }
 
     const { owner } = result.rows[0];
 
     if (owner !== userId) {
-      console.error(
-        `User: ${userId} is not the owner of playlist: ${playlistId}`
-      );
       throw new AuthorizationError("Anda tidak berhak mengakses resource ini");
     }
-
-    console.log(
-      `User: ${userId} is verified as the owner of playlist: ${playlistId}`
-    );
   }
 
   // Verifikasi lagu exists di tabel songs
@@ -229,9 +220,6 @@ class PlaylistsService {
 
   // Tambah activity record untuk operasi playlist song
   async addActivity(playlistId, songId, userId, action) {
-    console.log(
-      `Adding activity: playlistId=${playlistId}, songId=${songId}, userId=${userId}, action=${action}`
-    );
     const query = {
       text: "INSERT INTO playlist_song_activities (playlist_id, song_id, user_id, action) VALUES($1, $2, $3, $4)",
       values: [playlistId, songId, userId, action],
@@ -242,7 +230,6 @@ class PlaylistsService {
 
   // Get aktivitas playlist
   async getPlaylistActivities(playlistId) {
-    console.log(`Fetching activities for playlist ID: ${playlistId}`);
     const query = {
       text: `SELECT u.username, s.title, psa.action, psa.time 
              FROM playlist_song_activities psa 
@@ -254,7 +241,6 @@ class PlaylistsService {
     };
 
     const result = await this._pool.query(query);
-    console.log(`Activities fetched:`, result.rows);
     return result.rows;
   }
 }

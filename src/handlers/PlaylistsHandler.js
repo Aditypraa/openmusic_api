@@ -158,12 +158,8 @@ class PlaylistsHandler extends BaseHandler {
       const { id } = request.params;
       const { id: credentialId } = request.auth.credentials;
 
-      console.log(
-        `Verifying ownership for playlist: ${id}, user: ${credentialId}`
-      );
       await this._service.verifyPlaylistOwner(id, credentialId);
 
-      console.log(`Fetching activities for playlist: ${id}`);
       const activities = await this._service.getPlaylistActivities(id);
 
       const formattedActivities = activities.map((activity) => ({
@@ -173,13 +169,11 @@ class PlaylistsHandler extends BaseHandler {
         time: activity.time,
       }));
 
-      console.log(`Activities fetched successfully for playlist: ${id}`);
       return this._createSuccessResponse(h, {
         playlistId: id,
         activities: formattedActivities,
       });
     } catch (error) {
-      console.error(`Error in getPlaylistActivitiesHandler: ${error.message}`);
       return this._handleError(error, h);
     }
   }
