@@ -68,6 +68,33 @@
 
 - Get playlist activities: `GET /playlists/{id}/activities`
 
+### 6. OpenMusic API v3 Features Testing
+
+#### Upload Album Cover
+
+- Upload cover image: `POST /albums/{id}/covers`
+  - Use multipart/form-data
+  - Field name: "cover"
+  - Max size: 512KB
+  - Supported formats: JPEG, PNG, GIF, WEBP, AVIF, APNG
+  - Response includes coverUrl in album details
+
+#### Album Likes (Authentication Required)
+
+- Like an album: `POST /albums/{id}/likes`
+- Unlike an album: `DELETE /albums/{id}/likes`
+- Get likes count: `GET /albums/{id}/likes`
+  - Response includes custom header `X-Data-Source: cache` when data comes from cache
+  - Cache expires after 30 minutes
+
+#### Export Playlist (Authentication Required)
+
+- Export playlist: `POST /export/playlists/{playlistId}`
+  - Body: `{ "targetEmail": "user@example.com" }`
+  - Only playlist owner can export
+  - Uses RabbitMQ message broker
+  - Sends email with JSON attachment
+
 ## Development Commands
 
 - `npm run dev` - Start development server

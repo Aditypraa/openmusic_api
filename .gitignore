@@ -115,6 +115,8 @@ Thumbs.db
 yarn.lock
 
 # Application specific
-uploads/
 temp/
 cache/
+
+# Image 
+uploads/*

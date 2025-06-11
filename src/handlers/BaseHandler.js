@@ -16,6 +16,16 @@ class BaseHandler {
     return httpResponse;
   }
 
+  // Standardized fail response helper
+  _createFailResponse(h, message, statusCode = 400) {
+    const response = h.response({
+      status: "fail",
+      message: message,
+    });
+    response.code(statusCode);
+    return response;
+  }
+
   // Standardized error handling
   _handleError(error, h) {
     if (error instanceof ClientError) {
