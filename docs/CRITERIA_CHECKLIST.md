@@ -1,74 +1,153 @@
-# Submission Criteria Checklist
+# OpenMusic API v3 - Submission Criteria Checklist
 
-## Kriteria Wajib ✅
+## 🎯 OpenMusic API v3 - Kriteria Utama
 
-**1. Registrasi dan Autentikasi Pengguna**
+Berdasarkan studi kasus yang diberikan, OpenMusic API v3 harus memenuhi **5 kriteria utama**:
 
-- [x] POST /users (register)
-- [x] POST /authentications (login)
-- [x] PUT /authentications (refresh token)
-- [x] DELETE /authentications (logout)
-- [x] JWT authentication dengan access & refresh token
+### ✅ Kriteria 1: Ekspor Lagu Pada Playlist
 
-**2. Pengelolaan Data Playlist**
+**Endpoint:** `POST /export/playlists/{playlistId}`
+**Request Body:**
 
-- [x] POST /playlists (create playlist)
-- [x] GET /playlists (list user playlists)
-- [x] DELETE /playlists/{id} (delete playlist)
-- [x] POST /playlists/{id}/songs (add song to playlist)
-- [x] GET /playlists/{id}/songs (get playlist songs)
-- [x] DELETE /playlists/{id}/songs (remove song from playlist)
+```json
+{
+  "targetEmail": "user@example.com"
+}
+```
 
-**3. Foreign Key Relationships**
+**Ketentuan yang Dipenuhi:**
 
-- [x] songs → albums (album_id)
-- [x] playlists → users (owner)
-- [x] playlist_songs → playlists & songs
-- [x] collaborations → playlists & users
-- [x] playlist_song_activities → playlists, songs & users
+- [x] Wajib menggunakan **RabbitMQ** sebagai message broker
+- [x] Environment variable `RABBITMQ_SERVER` untuk host server
+- [x] Hanya **pemilik playlist** yang boleh mengekspor lagu
+- [x] Data yang dikirim: `playlistId` dan `targetEmail` saja
+- [x] Program **consumer terpisah** (`src/consumer/index.js`)
+- [x] Hasil ekspor berupa **data JSON**
+- [x] Dikirim melalui **email** menggunakan nodemailer
+- [x] Environment variables: `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_HOST`, `SMTP_PORT`
 
-**4. Data Validation**
+**Response:**
 
-- [x] Joi validation untuk semua input
-- [x] Required field validation
-- [x] Data type validation
+```json
+{
+  "status": "success",
+  "message": "Permintaan Anda sedang kami proses"
+}
+```
 
-**5. Error Handling**
+**Format JSON Export:**
 
-- [x] 400 Bad Request (validation errors)
-- [x] 401 Unauthorized (missing/invalid token)
-- [x] 403 Forbidden (insufficient permissions)
-- [x] 404 Not Found (resource not found)
-- [x] 500 Internal Server Error
+```json
+{
+  "playlist": {
+    "id": "playlist-Mk8AnmCp210PwT6B",
+    "name": "My Favorite Coldplay Song",
+    "songs": [
+      {
+        "id": "song-Qbax5Oy7L8WKf74l",
+        "title": "Life in Technicolor",
+        "performer": "Coldplay"
+      }
+    ]
+  }
+}
+```
 
-**6. V1 Features Maintained**
+### ✅ Kriteria 2: Mengunggah Sampul Album
 
-- [x] Albums CRUD operations
-- [x] Songs CRUD operations
-- [x] Song search by title/performer
+**Endpoint:** `POST /albums/{id}/covers`
+**Request Body (Form Data):**
 
-## Kriteria Opsional ✅
+```
+cover: file
+```
 
-**1. Playlist Collaboration**
+**Ketentuan yang Dipenuhi:**
 
-- [x] POST /collaborations (add collaborator)
-- [x] DELETE /collaborations (remove collaborator)
-- [x] Collaborator access to playlist operations
+- [x] MIME types harus **images** (JPEG, PNG, GIF, WEBP, AVIF, APNG)
+- [x] Ukuran file maksimal **512000 Bytes** (512KB)
+- [x] Support **File System lokal** dan **S3 Bucket**
+- [x] Environment variables S3: `AWS_BUCKET_NAME`, `AWS_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`
+- [x] **Flexible storage switching** via `STORAGE_TYPE=local|s3`
 
-**2. Activity Tracking**
+**Response:**
 
-- [x] GET /playlists/{id}/activities
-- [x] Activity logging untuk playlist changes
+```json
+{
+  "status": "success",
+  "message": "Sampul berhasil diunggah"
+}
+```
 
----
+**GET /albums/{id} Response:**
 
-**Status: ✅ SEMUA KRITERIA TERPENUHI**
+```json
+{
+  "status": "success",
+  "data": {
+    "album": {
+      "id": "album-Mk8AnmCp210PwT6B",
+      "name": "Viva la Vida",
+      "coverUrl": "http://localhost:5000/uploads/1234567890cover.jpg"
+    }
+  }
+}
+```
 
-- 6/6 Kriteria Wajib - COMPLETED
-- 3/3 Kriteria Opsional - COMPLETED
+**Ketentuan Cover:**
 
-**Total Score: 100%**
+- [x] URL gambar dapat **diakses dengan baik**
+- [x] `coverUrl` bernilai **null** jika belum ada sampul
+- [x] Sampul baru **mengganti** sampul lama
 
-- ✅ dotenv untuk environment variables
+### ✅ Kriteria 3: Menyukai Album
 
-Semua kriteria utama dan opsional telah terpenuhi! 🎉
+**Endpoints:**
+
+- `POST /albums/{id}/likes` - Menyukai album (Auth required)
+- `DELETE /albums/{id}/likes` - Batal menyukai album (Auth required)
+- `GET /albums/{id}/likes` - Melihat jumlah yang menyukai album
+
+**Ketentuan yang Dipenuhi:**
+
+- [x] **Authentication required** untuk menyukai/batal menyukai
+- [x] Pengguna hanya bisa menyukai album yang sama **1 kali**
+- [x] Response **400** jika mencoba menyukai album yang sudah disukai
+- [x] Sistem **like/unlike** yang aman dan konsisten
+
+### ✅ Kriteria 4: Menerapkan Server-Side Cache
+
+**Target Endpoint:** `GET /albums/{id}/likes`
+
+**Ketentuan yang Dipenuhi:**
+
+- [x] Cache bertahan selama **30 menit** (1800 seconds)
+- [x] Custom header `X-Data-Source: "cache"` ketika data dari cache
+- [x] Cache **dihapus** setiap kali ada perubahan likes pada album
+- [x] Memory caching menggunakan **Redis**
+- [x] Environment variable `REDIS_SERVER` untuk host
+
+**Response dari Cache:**
+
+```json
+{
+  "status": "success",
+  "data": {
+    "likes": 5
+  }
+}
+```
+
+_Header: `X-Data-Source: cache`_
+
+### ✅ Kriteria 5: Pertahankan Fitur v2 dan v1
+
+**Fitur yang Dipertahankan:**
+
+- [x] **Pengelolaan Data Album** - CRUD operations lengkap
+- [x] **Pengelolaan Data Song** - CRUD + search functionality
+- [x] **Registrasi dan Autentikasi** - JWT-based auth system
+- [x] **Pengelolaan Data Playlist** - Full playlist management
+- [x] **Foreign Key Relationships** - Data integrity terjaga
+- [x] **Data Validation** - Joi schema validation
+- [x] **Error Handling** - Comprehensive error responses

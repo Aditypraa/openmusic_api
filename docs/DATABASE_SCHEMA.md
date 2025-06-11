@@ -1,49 +1,56 @@
-# 🗄️ Database Schema - OpenMusic API v2
+# 🗄️ Database Schema - OpenMusic API v3
 
-Dokumentasi lengkap struktur database PostgreSQL untuk OpenMusic API v2 dengan penjelasan detail setiap tabel dan relasi.
+Dokumentasi lengkap struktur database PostgreSQL untuk OpenMusic API v3 dengan penjelasan detail setiap tabel dan relasi. V3 menambahkan fitur album likes system dan upload cover album.
 
 ## 📋 Daftar Isi
 
 - [Overview](#-overview)
 - [V1 Tables (Fitur Dasar)](#-v1-tables-fitur-dasar)
-- [V2 Tables (Fitur Baru)](#-v2-tables-fitur-baru)
+- [V2 Tables (Fitur Authentication & Playlists)](#-v2-tables-fitur-authentication--playlists)
+- [V3 Tables (Fitur Album Likes & Cover)](#-v3-tables-fitur-album-likes--cover)
 - [Entity Relationship Diagram](#-entity-relationship-diagram)
 - [Database Constraints](#-database-constraints)
 - [Indexes dan Performance](#-indexes-dan-performance)
 
 ## 🏗️ Overview
 
-Database OpenMusic API v2 menggunakan PostgreSQL dengan total **8 tabel** yang terbagi menjadi:
+Database OpenMusic API v3 menggunakan PostgreSQL dengan total **10 tabel** yang terbagi menjadi:
 
-- **2 tabel V1** (fitur dasar yang dipertahankan)
+- **2 tabel V1** (fitur dasar yang dipertahankan): `albums`, `songs`
 - **6 tabel V2** (fitur authentication, playlist, dan kolaborasi): `users`, `authentications`, `playlists`, `playlist_songs`, `collaborations`, `playlist_song_activities`
+- **1 tabel V3** (fitur album likes): `album_likes`
+- **Modifikasi V3** pada tabel `albums` dengan penambahan kolom `cover_url`
 
 ### Arsitektur Database
 
 - **RDBMS:** PostgreSQL v12+
 - **Migration Tool:** node-pg-migrate
 - **Connection Pool:** node-postgres (pg)
+- **Caching Layer:** Redis (V3 feature)
+- **Storage:** Local/S3 untuk upload cover album (V3 feature)
 - **Pattern:** Foreign Key relationships dengan CASCADE DELETE
 - **ID Strategy:**
   - V1: VARCHAR(50) dengan format `{entity}-{nanoid}`
   - V2: Mixed - VARCHAR(50) untuk main entities, SERIAL untuk junction tables
+  - V3: VARCHAR(50) untuk album_likes, consistent dengan main entities pattern
 - **Timestamp Strategy:**
   - V1: TEXT fields untuk created_at/updated_at
-  - V2: TIMESTAMP dengan DEFAULT CURRENT_TIMESTAMP
+  - V2-V3: TIMESTAMP dengan DEFAULT CURRENT_TIMESTAMP
 
 ---
 
 ## 📀 V1 Tables (Fitur Dasar)
 
-### 1. 🎵 `albums` Table
+### 1. 🎵 `albums` Table (Updated in V3)
 
-Menyimpan data album musik dengan informasi dasar.
+Menyimpan data album musik dengan informasi dasar. V3 menambahkan kolom `cover_url` untuk upload cover album.
 
 ```sql
 CREATE TABLE albums (
     id VARCHAR(50) PRIMARY KEY,
     name TEXT NOT NULL,
     year INTEGER NOT NULL,
+    cover_url TEXT,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -56,8 +63,14 @@ CREATE TABLE albums (
 | `id`         | VARCHAR(50) | PRIMARY KEY | Unique identifier album (format: album-xxx) |
 | `name`       | TEXT        | NOT NULL    | Nama album                                  |
 | `year`       | INTEGER     | NOT NULL    | Tahun rilis album                           |
+| `cover_url`  | TEXT        | NULL        | URL cover album (V3 feature)                |
 | `created_at` | TEXT        | NOT NULL    | Timestamp pembuatan record                  |
 | `updated_at` | TEXT        | NOT NULL    | Timestamp update terakhir                   |
+
+**V3 Changes:**
+
+- ✅ **Added:** `cover_url` field untuk menyimpan URL cover album
+- 🔧 **Feature:** Support upload cover via local storage atau S3
 
 **Contoh Data:**
 
@@ -66,6 +79,7 @@ CREATE TABLE albums (
   "id": "album-Mk8AnmCp210PwT6B",
   "name": "Viva la Vida",
   "year": 2008,
+  "cover_url": "http://localhost:5000/uploads/covers/1234567890-viva-la-vida.jpg",
   "created_at": "2024-01-15T10:30:00Z",
   "updated_at": "2024-01-15T10:30:00Z"
 }
@@ -127,7 +141,7 @@ CREATE TABLE songs (
 
 ---
 
-## 👤 V2 Tables (Fitur Baru)
+## 👤 V2 Tables (Fitur Authentication & Playlists)
 
 ### 3. 🧑‍💼 `users` Table
 
@@ -344,9 +358,104 @@ CREATE INDEX idx_activities_time ON playlist_song_activities(time);
 
 ---
 
+## ❤️ V3 Tables (Fitur Album Likes & Cover)
+
+### 9. 💖 `album_likes` Table
+
+Menyimpan data likes album dari pengguna (V3 feature).
+
+```sql
+CREATE TABLE album_likes (
+    id VARCHAR(50) PRIMARY KEY,
+    user_id VARCHAR(50) NOT NULL,
+    album_id VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE,
+    UNIQUE(user_id, album_id)
+);
+
+-- Indexes untuk performa
+CREATE INDEX idx_album_likes_user ON album_likes(user_id);
+CREATE INDEX idx_album_likes_album ON album_likes(album_id);
+```
+
+**Struktur Field:**
+
+| Field        | Type        | Constraint  | Deskripsi                            |
+| ------------ | ----------- | ----------- | ------------------------------------ |
+| `id`         | VARCHAR(50) | PRIMARY KEY | Unique identifier (format: like-xxx) |
+| `user_id`    | VARCHAR(50) | FOREIGN KEY | ID user yang memberikan like         |
+| `album_id`   | VARCHAR(50) | FOREIGN KEY | ID album yang di-like                |
+| `created_at` | TIMESTAMP   | NOT NULL    | Timestamp penambahan like            |
+
+**Constraints:**
+
+- **UNIQUE(user_id, album_id)** - Mencegah duplikasi like dari user yang sama pada album yang sama
+- User hanya bisa like album sekali
+
+**Relasi:**
+
+- `user_id` → `users.id` (Many-to-One)
+- `album_id` → `albums.id` (Many-to-One)
+- **ON DELETE CASCADE:** Jika user/album dihapus, like ikut terhapus
+
+**V3 Business Logic:**
+
+- **Like Album:** User bisa memberikan like pada album
+- **Unlike Album:** User bisa menghapus like yang sudah diberikan
+- **Get Album Likes Count:** Mendapatkan jumlah total likes untuk album (dengan Redis caching 30 menit TTL)
+- **Get User Liked Albums:** Mendapatkan daftar album yang di-like user
+- **Authentication Required:** Semua operasi album likes memerlukan JWT token yang valid
+- **Caching Strategy:** Redis cache untuk performa optimal pada query likes count
+
+**Contoh Data:**
+
+```json
+{
+  "id": "like-Qbax5Oy7L8WKf74l",
+  "user_id": "user-Qbax5Oy7L8WKf74l",
+  "album_id": "album-Mk8AnmCp210PwT6B",
+  "created_at": "2024-01-15T14:30:00.000Z"
+}
+```
+
+**Contoh Query Pattern:**
+
+```sql
+-- Menambahkan like
+INSERT INTO album_likes (user_id, album_id)
+VALUES ('user-123', 'album-456');
+
+-- Menghapus like
+DELETE FROM album_likes
+WHERE user_id = 'user-123' AND album_id = 'album-456';
+
+-- Mendapatkan jumlah likes album
+SELECT COUNT(*) as likes_count
+FROM album_likes
+WHERE album_id = 'album-456';
+
+-- Cek apakah user sudah like album
+SELECT EXISTS(
+    SELECT 1 FROM album_likes
+    WHERE user_id = 'user-123' AND album_id = 'album-456'
+) as is_liked;
+```
+
+---
+
 ## 🔗 Entity Relationship Diagram
 
-![ERD](./image/View-Diagram.png)
+![ERD](./image/View-Diagram-v3.png)
+
+**V3 Updates to ERD:**
+
+- ✅ **albums** table now includes `cover_url` field
+- ✅ **album_likes** table dengan relasi ke `users` dan `albums`
+- 🔗 **New relationships:**
+  - `album_likes.user_id` → `users.id` (Many-to-One)
+  - `album_likes.album_id` → `albums.id` (Many-to-One)
 
 ---
 
@@ -359,6 +468,8 @@ CREATE INDEX idx_activities_time ON playlist_song_activities(time);
   - `users`, `playlists`: menggunakan VARCHAR(50) sebagai primary key
   - `authentications`: menggunakan TEXT sebagai primary key (token)
   - `playlist_songs`, `collaborations`, `playlist_song_activities`: menggunakan SERIAL sebagai primary key
+- **V3 Tables**:
+  - `album_likes`: menggunakan VARCHAR(50) sebagai primary key
 - Format ID untuk VARCHAR: `{entity}-{nanoid}`
 - Contoh: `user-Qbax5Oy7L8WKf74l`
 
@@ -375,6 +486,8 @@ CREATE INDEX idx_activities_time ON playlist_song_activities(time);
 | `playlist_song_activities` | `playlist_id` | `playlists(id)` | CASCADE   |
 | `playlist_song_activities` | `song_id`     | `songs(id)`     | CASCADE   |
 | `playlist_song_activities` | `user_id`     | `users(id)`     | CASCADE   |
+| `album_likes`              | `user_id`     | `users(id)`     | CASCADE   |
+| `album_likes`              | `album_id`    | `albums(id)`    | CASCADE   |
 
 ### Unique Constraints
 
@@ -382,6 +495,7 @@ CREATE INDEX idx_activities_time ON playlist_song_activities(time);
 - `authentications.token` - Primary key sekaligus unique
 - `playlist_songs(playlist_id, song_id)` - Mencegah duplikasi lagu dalam playlist yang sama
 - `collaborations(playlist_id, user_id)` - Mencegah duplikasi kolaborator dalam playlist yang sama
+- `album_likes(user_id, album_id)` - Mencegah duplikasi like dari user yang sama pada album yang sama (V3)
 
 ### Timestamp Fields
 
@@ -426,9 +540,16 @@ CREATE INDEX idx_songs_title ON songs(title);
 CREATE INDEX idx_songs_performer ON songs(performer);
 CREATE INDEX idx_songs_genre ON songs(genre);
 
+-- Album likes indexes (V3 - Direkomendasikan untuk performa)
+CREATE INDEX idx_album_likes_user ON album_likes(user_id);
+CREATE INDEX idx_album_likes_album ON album_likes(album_id);
+
 -- Composite index untuk query kompleks
 CREATE INDEX idx_songs_title_performer ON songs(title, performer);
 CREATE INDEX idx_playlist_activities_playlist_time ON playlist_song_activities(playlist_id, time);
+
+-- V3 Performance untuk album likes
+CREATE INDEX idx_album_likes_user_album ON album_likes(user_id, album_id);
 ```
 
 ### Query Optimization Tips
@@ -437,6 +558,9 @@ CREATE INDEX idx_playlist_activities_playlist_time ON playlist_song_activities(p
 2. **Index composite** untuk query yang sering digunakan bersamaan
 3. **Connection pooling** untuk mengelola koneksi database
 4. **Prepared statements** untuk mencegah SQL injection
+5. **Redis Caching (V3)** untuk album likes count - TTL 30 menit
+6. **Batch operations** untuk multiple likes/unlikes
+7. **Database transactions** untuk data consistency
 
 ---
 
@@ -458,6 +582,10 @@ Migrations harus dijalankan dalam urutan yang benar karena adanya foreign key de
 1749096746232_create-table-playlist-songs.js   # Depends on: playlists, songs
 1749096773698_create-table-collaborations.js   # Depends on: playlists, users
 1749096815243_create-table-playlist-song-activities.js  # Depends on: playlists, songs, users
+
+# 3. V3 Tables (Album Likes & Cover Upload)
+1749097100000_add-cover-url-to-albums.js    # Modifies: albums table
+1749097200000_create-table-album-likes.js   # Depends on: users, albums
 ```
 
 ### Commands
@@ -478,4 +606,4 @@ npm run setup:sample
 
 ---
 
-**💾 Database Schema** - _Struktur data yang robust dan scalable untuk OpenMusic API v2_
+**💾 Database Schema** - _Struktur data yang robust dan scalable untuk OpenMusic API v3_
