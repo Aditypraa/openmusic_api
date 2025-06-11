@@ -1,18 +1,24 @@
 // S3 Storage Service for OpenMusic API v3
-import AWS from "aws-sdk";
+import {
+  S3Client,
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 class S3StorageService {
   constructor() {
-    this._S3 = new AWS.S3({
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    this._S3 = new S3Client({
+      credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      },
       region: process.env.AWS_REGION,
     });
-
     this._bucketName = process.env.AWS_BUCKET_NAME;
   }
 
-  writeFile(file, meta) {
+  async writeFile(file, meta) {
     const parameter = {
       Bucket: this._bucketName,
       Key: +new Date() + meta.filename,
@@ -20,35 +26,31 @@ class S3StorageService {
       ContentType: meta.headers["content-type"],
     };
 
-    return new Promise((resolve, reject) => {
-      this._S3.upload(parameter, (error, data) => {
-        if (error) {
-          return reject(error);
-        }
-
-        return resolve(data.Location);
-      });
-    });
+    const command = new PutObjectCommand(parameter);
+    await this._S3.send(command);
+    return this.generateUrl(parameter.Key);
   }
 
   generateUrl(filename) {
     return `https://${this._bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${filename}`;
   }
 
-  deleteFile(filename) {
+  async generatePresignedUrl(filename, expiresIn = 3600) {
+    const command = new PutObjectCommand({
+      Bucket: this._bucketName,
+      Key: filename,
+    });
+    return await getSignedUrl(this._S3, command, { expiresIn });
+  }
+
+  async deleteFile(filename) {
     const parameter = {
       Bucket: this._bucketName,
       Key: filename,
     };
 
-    return new Promise((resolve, reject) => {
-      this._S3.deleteObject(parameter, (error, data) => {
-        if (error) {
-          return reject(error);
-        }
-        return resolve(data);
-      });
-    });
+    const command = new DeleteObjectCommand(parameter);
+    return await this._S3.send(command);
   }
 }
 

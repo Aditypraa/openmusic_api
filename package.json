@@ -24,11 +24,12 @@
     "check": "npm run prettier && npm run lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.826.0",
+    "@aws-sdk/s3-request-presigner": "^3.826.0",
     "@hapi/hapi": "^21.4.0",
     "@hapi/inert": "^7.1.0",
     "@hapi/jwt": "^3.2.0",
     "amqplib": "^0.10.4",
-    "aws-sdk": "^2.1691.0",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.5.0",
     "joi": "^17.13.3",

@@ -29,8 +29,8 @@ import PlaylistsService from "./services/PlaylistsService.js";
 import CollaborationsService from "./services/CollaborationsService.js";
 import ExportsService from "./services/ExportsService.js";
 import AlbumLikesService from "./services/AlbumLikesService.js";
-import CacheService from "./utils/CacheService.js";
-import StorageService from "./utils/StorageService.js";
+import CacheService from "./utils/redis/RedisCacheService.js";
+import createStorageService from "./utils/StorageConfig.js";
 
 // Import handlers
 import AlbumsHandler from "./handlers/AlbumsHandler.js";
@@ -59,9 +59,8 @@ const init = async () => {
   // Initialize cache service
   const cacheService = new CacheService();
   await cacheService.connect();
-
   // Initialize storage service
-  const storageService = new StorageService();
+  const storageService = createStorageService();
 
   // Initialize services
   const albumsService = new AlbumsService(pool);
