@@ -140,8 +140,21 @@ openmusic_api/                          # Root directory
 │   │       └── 📄 AuthorizationError.js # Authorization errors
 │   │
 │   ├── 📁 migrations/                # 🗄️ Database Migrations
-│   ├── 📁 uploads/                   # 📁 File Upload Storage (Local)
-│   └── 📁 docs/                      # 📚 API Documentation
+│   │   ├── 📄 1685000000000_create-table-albums.js
+│   │   ├── 📄 1685000000001_create-table-songs.js
+│   │   ├── 📄 1749096666947_create-table-users.js
+│   │   ├── 📄 1749096718050_create-table-playlists.js
+│   │   ├── 📄 1749096746232_create-table-playlist-songs.js
+│   │   ├── 📄 1749096773698_create-table-collaborations.js
+│   │   ├── 📄 1749096815243_create-table-playlist-song-activities.js
+│   │   ├── 📄 1749097002117_create-table-authentications.js
+│   │   ├── 📄 1749097100000_add-cover-url-to-albums.js # 🆕 V3: Album covers ⭐
+│   │   └── 📄 1749097200000_create-table-album-likes.js # 🆕 V3: Album likes ⭐
+│   │
+│   └── 📁 uploads/                   # 🆕 V3: Local File Storage ⭐
+│       ├── 📄 .gitkeep              # Git placeholder file
+│       ├── 📄 1749721733369picture-small.jpg # Sample uploaded cover
+│       └── 📄 1749722066494picture-small.jpg # Sample uploaded cover
 │
 ├── 📁 export-service/                # 📧 Consumer Service (Export Service)
 │   ├── 📄 package.json              # Export Service dependencies (4 packages)
@@ -216,7 +229,9 @@ openmusic_api/                          # Root directory
 │ │ └── 📄 S3StorageService.js # Amazon S3 storage service
 │ │
 │ ├── 📁 uploads/ # 🆕 V3: Local File Storage ⭐
-│ │ └── 📄 \*.jpg # Uploaded cover images (example)
+│ │ ├── 📄 .gitkeep # Git placeholder file
+│ │ ├── 📄 1749721733369picture-small.jpg # Sample uploaded cover
+│ │ └── 📄 1749722066494picture-small.jpg # Sample uploaded cover
 │ │
 │ └── 📁 exceptions/ # ❌ Custom Error Classes
 │ ├── 📄 ClientError.js # Base client error class
@@ -274,9 +289,9 @@ openmusic_api/                          # Root directory
 
 - `routes/*.js` - Route definitions dengan method dan path
 - `handlers/*Handler.js` - HTTP request processors
-- **V3 New:** `consumer/index.js` - RabbitMQ message consumer
-- **V3 New:** `consumer/MailSender.js` - Email service untuk export
-- **V3 New:** `consumer/PlaylistsService.js` - Consumer playlist service
+- **V3 New:** `export-service/src/index.js` - RabbitMQ message consumer
+- **V3 New:** `export-service/src/services/MailSender.js` - Email service untuk export
+- **V3 New:** `export-service/src/services/PlaylistsService.js` - Consumer playlist service
 
 **Contoh Flow V3:**
 
@@ -311,7 +326,7 @@ async postUploadImageHandler(request, h) {
   }
 }
 
-// consumer/index.js - V3 RabbitMQ Consumer
+// export-service/src/index.js - V3 RabbitMQ Consumer
 channel.consume("export:playlist", async (message) => {
   try {
     const { playlistId, targetEmail } = JSON.parse(message.content.toString());

@@ -21,7 +21,7 @@ Berdasarkan studi kasus yang diberikan, OpenMusic API v3 harus memenuhi **5 krit
 - [x] Environment variable `RABBITMQ_SERVER` untuk host server
 - [x] Hanya **pemilik playlist** yang boleh mengekspor lagu
 - [x] Data yang dikirim: `playlistId` dan `targetEmail` saja
-- [x] Program **consumer terpisah** (`src/consumer/index.js`)
+- [x] Program **consumer terpisah** (`export-service/src/index.js`)
 - [x] Hasil ekspor berupa **data JSON**
 - [x] Dikirim melalui **email** menggunakan nodemailer
 - [x] Environment variables: `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_HOST`, `SMTP_PORT`

@@ -264,11 +264,13 @@ node test-storage.js
 ### 5. **Start Development**
 
 ```powershell
-# Terminal 1: Start API Server
+# Terminal 1: Start API Server (from openmusic-api directory)
+cd openmusic-api
 npm run dev
 
-# Terminal 2: Start Consumer (new terminal)
-npm run dev:consumer
+# Terminal 2: Start Export Service (from export-service directory)
+cd export-service
+npm run dev
 ```
 
 **Expected Console Output:**
@@ -411,14 +413,18 @@ npm run test:db
 # Using PM2 for production
 npm install -g pm2
 
-# Start services
+# Start API Server (from openmusic-api directory)
+cd openmusic-api
 pm2 start src/server.js --name "openmusic-api"
-pm2 start src/consumer/index.js --name "openmusic-consumer"
+
+# Start Export Service (from export-service directory)
+cd ../export-service
+pm2 start src/index.js --name "openmusic-export-service"
 
 # Monitor services
 pm2 status
 pm2 logs openmusic-api
-pm2 logs openmusic-consumer
+pm2 logs openmusic-export-service
 
 # Auto-restart on system reboot
 pm2 startup

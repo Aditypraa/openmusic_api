@@ -357,13 +357,15 @@ Body: { "targetEmail": "test@example.com" }
 ## Development Commands
 
 ```bash
-# Server Commands
+# API Server Commands (from openmusic-api directory)
 npm run dev              # Development server with auto-reload
 npm start                # Production server
-npm run dev:consumer     # Development consumer for export
-npm run start:consumer   # Production consumer for export
 
-# Database Commands
+# Export Service Commands (from export-service directory)
+npm run dev              # Development export service
+npm start                # Production export service
+
+# Database Commands (from openmusic-api directory)
 npm run migrate:up       # Run database migrations
 npm run migrate:down     # Rollback migrations
 npm run test:db          # Test database connection
@@ -467,8 +469,8 @@ For comprehensive testing, import the Postman collection:
 - [ ] RabbitMQ server running (`rabbitmqctl status` OK)
 - [ ] Environment variables configured
 - [ ] Database migrations executed
-- [ ] API server running (`npm run dev`)
-- [ ] Consumer running (`npm run dev:consumer`)
+- [ ] API server running (`npm run dev` from openmusic-api directory)
+- [ ] Export service running (`npm run dev` from export-service directory)
 
 ### V1 Testing ☑️
 
