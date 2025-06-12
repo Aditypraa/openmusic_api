@@ -16,7 +16,7 @@ class StorageService {
     this._baseUrl = `http://${host}:${port}`;
 
     // Create uploads directory if it doesn't exist (at openmusic-api level)
-    const uploadsPath = path.resolve(__dirname, `../../${folder}`);
+    const uploadsPath = path.resolve(__dirname, `../../../${folder}`);
     if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
       console.log(`📁 Created uploads directory: ${uploadsPath}`);
@@ -27,7 +27,7 @@ class StorageService {
     const filename = +new Date() + meta.filename;
     const filepath = path.resolve(
       __dirname,
-      `../../${this._folder}/${filename}`
+      `../../../${this._folder}/${filename}`
     );
 
     const fileStream = fs.createWriteStream(filepath);
@@ -46,7 +46,7 @@ class StorageService {
   deleteFile(filename) {
     const filePath = path.resolve(
       __dirname,
-      `../../${this._folder}/${filename}`
+      `../../../${this._folder}/${filename}`
     );
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
