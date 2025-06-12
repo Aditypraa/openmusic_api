@@ -10,8 +10,9 @@ class StorageService {
   constructor(folder = "uploads") {
     this._folder = folder;
 
-    const host = process.env.HOST;
-    const port = process.env.PORT;
+    // Build base URL dynamically from HOST and PORT env variables
+    const host = process.env.HOST || "localhost";
+    const port = process.env.PORT || 5000;
     this._baseUrl = `http://${host}:${port}`;
 
     // Create uploads directory if it doesn't exist

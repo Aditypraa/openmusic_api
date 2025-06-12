@@ -121,15 +121,15 @@ const init = async () => {
       plugin: Inert,
     },
   ]);
-
   // Static file serving for uploads
   server.route({
     method: "GET",
     path: "/uploads/{param*}",
     handler: {
       directory: {
-        path: ".",
+        path: path.resolve(__dirname, "../uploads"),
         redirectToSlash: true,
+        index: false, // Security: disable directory listing
       },
     },
   });
