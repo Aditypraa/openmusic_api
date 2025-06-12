@@ -1,9 +1,18 @@
-// Playlist Service for Consumer
+// Playlist Service for Export Service
 import pool from "../utils/database.js";
 
 class PlaylistsService {
   constructor() {
     this._pool = pool;
+  }
+
+  async testConnection() {
+    try {
+      const result = await this._pool.query("SELECT NOW()");
+      return result;
+    } catch (error) {
+      throw new Error(`Database connection test failed: ${error.message}`);
+    }
   }
 
   async getPlaylistById(playlistId) {

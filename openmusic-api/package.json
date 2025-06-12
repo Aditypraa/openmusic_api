@@ -1,7 +1,7 @@
 {
-  "name": "openmusic-api",
+  "name": "openmusic-api-server",
   "version": "1.0.0",
-  "description": "Open Music Api Dicoding",
+  "description": "OpenMusic REST API Server - Producer Service",
   "license": "ISC",
   "author": "Aditya Pratama",
   "type": "module",
@@ -9,8 +9,6 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "start:consumer": "node src/consumer/index.js",
-    "dev:consumer": "nodemon src/consumer/index.js",
     "migrate": "node-pg-migrate",
     "migrate:up": "node-pg-migrate up",
     "migrate:down": "node-pg-migrate down",
@@ -35,7 +33,6 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "nanoid": "^5.1.5",
-    "nodemailer": "^6.9.14",
     "pg": "^8.16.0",
     "redis": "^4.7.0"
   },

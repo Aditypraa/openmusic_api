@@ -34,4 +34,6 @@ class ProducerService {
   }
 }
 
-export default ProducerService;
+// Export singleton instance
+const producerService = new ProducerService();
+export default producerService;

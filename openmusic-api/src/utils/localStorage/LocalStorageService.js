@@ -15,18 +15,22 @@ class StorageService {
     const port = process.env.PORT || 5000;
     this._baseUrl = `http://${host}:${port}`;
 
-    // Create uploads directory if it doesn't exist
+    // Create uploads directory if it doesn't exist (at openmusic-api level)
     const uploadsPath = path.resolve(__dirname, `../../${folder}`);
     if (!fs.existsSync(uploadsPath)) {
       fs.mkdirSync(uploadsPath, { recursive: true });
+      console.log(`📁 Created uploads directory: ${uploadsPath}`);
     }
   }
 
   writeFile(file, meta) {
     const filename = +new Date() + meta.filename;
-    const path = `${this._folder}/${filename}`;
+    const filepath = path.resolve(
+      __dirname,
+      `../../${this._folder}/${filename}`
+    );
 
-    const fileStream = fs.createWriteStream(path);
+    const fileStream = fs.createWriteStream(filepath);
 
     return new Promise((resolve, reject) => {
       fileStream.on("error", (error) => reject(error));

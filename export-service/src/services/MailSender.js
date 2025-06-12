@@ -1,9 +1,9 @@
-// Mail Sender for Export Service
+// Mail Sender Service for Export Service
 import nodemailer from "nodemailer";
 
 class MailSender {
   constructor() {
-    this._transporter = nodemailer.createTransporter({
+    this._transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
       auth: {
@@ -17,7 +17,7 @@ class MailSender {
     const message = {
       from: process.env.SMTP_USER,
       to: targetEmail,
-      subject: "Ekspor Playlist",
+      subject: "Ekspor Playlist - OpenMusic API",
       text: "Terlampir hasil ekspor playlist Anda",
       attachments: [
         {

@@ -1,25 +1,39 @@
-# Testing Guide - OpenMusic API v3
+# Testing Guide - OpenMusic API v3 Microservices
 
 ## Prerequisites Setup
 
-Sebelum testing, pastikan semua services berjalan:
+Sebelum testing, pastikan semua services dan dependencies berjalan:
 
-### 1. Services Required
+### 1. **Services Required**
 
-- ✅ **PostgreSQL** - Database
-- ✅ **Redis** - Caching
-- ✅ **RabbitMQ** - Message broker
-- ✅ **SMTP Email** - Export notifications
+- ✅ **PostgreSQL** - Shared database
+- ✅ **Redis** - Caching untuk API server
+- ✅ **RabbitMQ** - Message broker untuk komunikasi services
+- ✅ **SMTP Email** - Export notifications (Export Service)
 
-### 2. Environment Setup
+### 2. **Multi-Service Environment Setup**
+
+**API Server Setup:**
 
 ```bash
+# Di directory openmusic-api/
 npm install
 cp .env.example .env
-# Configure all environment variables in .env
+# Configure .env untuk API server
+```
+
+**Export Service Setup:**
+
+```bash
+# Di directory export-service/
+npm install
+cp .env.example .env
+# Configure .env untuk export service
 ```
 
 **Required Environment Variables:**
+
+**API Server (.env):**
 
 ```env
 # Database
@@ -33,37 +47,59 @@ REDIS_SERVER=127.0.0.1
 # RabbitMQ (Required untuk export)
 RABBITMQ_SERVER=amqp://localhost
 
-# SMTP (Required untuk export)
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
-SMTP_PASSWORD=your_app_password
-
 # Storage (Local/S3)
 STORAGE_TYPE=local
 # AWS credentials (jika menggunakan S3)
 ```
 
-### 3. Database Setup
+**Export Service (.env):**
+
+```env
+# Database (Same as API Server)
+PGUSER=postgres
+PGPASSWORD=your_password
+PGDATABASE=openmusic_api
+
+# RabbitMQ (Same as API Server)
+RABBITMQ_SERVER=amqp://localhost
+
+# SMTP (Required untuk export)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+```
+
+### 3. **Database Setup**
 
 ```bash
+# Dari API server directory
 npm run migrate:up
 npm run setup:sample  # Optional sample data
 ```
 
-### 4. Start Services
+### 4. **Services Verification**
+
+```bash
+# Verify dependencies
+redis-cli ping        # Should return PONG
+rabbitmqctl status    # Should show running
+npm run test:db       # Should connect successfully (from API server)
+```
+
+### 5. **Start Services**
 
 ```bash
 # Terminal 1: API Server
+cd openmusic-api
 npm run dev
 
-# Terminal 2: Consumer (untuk export)
-npm run dev:consumer
+# Terminal 2: Export Service
+cd export-service
+npm run dev
 
-# Verify services
-redis-cli ping        # Should return PONG
-rabbitmqctl status    # Should show running
-npm run test:db       # Should connect successfully
+# Terminal 3: Monitor (Optional)
+rabbitmqctl list_queues name messages
 ```
 
 ## Testing Flow
@@ -209,30 +245,96 @@ GET /albums/{id}/likes
 # Should NOT have X-Data-Source: cache
 ```
 
-#### D. Export Playlist
+#### D. Export Playlist (Microservices Testing)
 
 **Prerequisites:**
 
-- RabbitMQ running
-- Consumer running (`npm run dev:consumer`)
-- Valid SMTP configuration
+- RabbitMQ running dan accessible
+- Export Service running (`cd ../export-service && npm run dev`)
+- Valid SMTP configuration di export-service/.env
 
 **Test Scenarios:**
 
 ```bash
 # Export playlist (Owner only)
 POST /export/playlists/{playlistId}
+Content-Type: application/json
+Authorization: Bearer {access_token}
+Body: {"targetEmail": "test@example.com"}
+
+# Expected flow:
+# 1. API Server validates owner → 201 response
+# 2. Message sent to RabbitMQ queue
+# 3. Export Service consumes message
+# 4. Email sent with JSON attachment
+```
+
+**Testing Steps:**
+
+1. **Create and populate playlist** (via API Server)
+2. **Send export request** (via API Server)
+3. **Monitor queue** - `rabbitmqctl list_queues`
+4. **Check export service logs** - Should show processing
+5. **Verify email received** - Check target email
+
+**Expected Results:**
+
+- ✅ API Server responds with 201 immediately
+- ✅ RabbitMQ queue receives message
+- ✅ Export Service processes message
+- ✅ Email delivered with correct JSON format
+
+## 🔄 **Microservices Testing Flow**
+
+### **Service Integration Testing**
+
+```bash
+# 1. Test API Server independently
+curl http://localhost:5000/albums
+
+# 2. Test Export Service is listening
+# Check export service logs should show "Waiting for export requests"
+
+# 3. Test end-to-end export flow
+# Send export request → Check email received
+
+# 4. Test service failure scenarios
+# Stop export service → API should still respond 201
+# Export service down → Messages queued for later processing
+```
+
+### **Service Dependencies Testing**
+
+```bash
+# Test API Server without Export Service (Should work)
+# - All endpoints except export should work normally
+# - Export requests queue up for later processing
+
+# Test Export Service without API Server (Should work)
+# - Service should start and wait for messages
+# - Manual message injection should work
+
+# Test both services with shared database
+# - Data consistency across services
+# - No conflicts in database access
+```
+
 Authorization: Bearer {owner_access_token}
 Body: { "targetEmail": "test@example.com" }
 
 # Expected: 201 "Permintaan Anda sedang kami proses"
+
 # Check email for JSON attachment
 
 # Test authorization:
+
 # Non-owner access → 403 Forbidden
+
 # Invalid playlist → 404 Not Found
+
 # Invalid email → 400 Bad Request
-```
+
+````
 
 **Export Format Verification:**
 
@@ -250,7 +352,7 @@ Body: { "targetEmail": "test@example.com" }
     ]
   }
 }
-```
+````
 
 ## Development Commands
 
