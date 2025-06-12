@@ -9,7 +9,10 @@ const __dirname = path.dirname(__filename);
 class StorageService {
   constructor(folder = "uploads") {
     this._folder = folder;
-    this._baseUrl = process.env.BASE_URL || "http://localhost:5000";
+
+    const host = process.env.HOST;
+    const port = process.env.PORT;
+    this._baseUrl = `http://${host}:${port}`;
 
     // Create uploads directory if it doesn't exist
     const uploadsPath = path.resolve(__dirname, `../../${folder}`);
